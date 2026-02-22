@@ -2,9 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:get/get_navigation/src/root/get_material_app.dart';
 import 'package:musliemapp/core/theme/app_theme.dart';
 import 'package:musliemapp/home_page.dart';
+import 'package:quran_library/quran_library.dart';
+import 'package:musliemapp/core/services/notification_service.dart';
 
-void main() {
-  runApp(MainApp());
+import 'package:intl/date_symbol_data_local.dart';
+
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await initializeDateFormatting('ar', null);
+  await NotificationService().init();
+  await QuranLibrary.init();
+  runApp(const MainApp());
 }
 
 class MainApp extends StatelessWidget {

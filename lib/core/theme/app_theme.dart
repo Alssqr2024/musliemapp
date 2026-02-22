@@ -2,18 +2,28 @@ import 'package:flutter/material.dart';
 import 'package:musliemapp/utils/constants/constants.dart';
 
 class AppTheme {
-  // Colors
-  static const Color primaryColor = Color(0xFF0F5132); // Deep Emerald Green
-  static const Color secondaryColor = Color(0xFFD4AF37); // Metallic Gold
-  static const Color accentColor = Color(
-    0xFF198754,
-  ); // Lighter Green for accents
-  static const Color backgroundColor = Color(0xFFF8F9FA); // Soft White/Grey
-  static const Color surfaceColor = Colors.white;
-  static const Color errorColor = Color(0xFFDC3545);
+  // Colors - Royal Emerald Glass Palette
+  static const Color primaryColor = Color(0xFF0F5132); // Deep Emerald
+  static const Color secondaryColor = Color(0xFFFFD700); // Gold
+  static const Color accentColor = Color(0xFF198754);
+  static const Color backgroundColor = Color(0xFF0F2027); // Dark Background
+  static const Color surfaceColor = Color(0xFF1E3A43); // Dark Surface
 
-  static const Color textPrimary = Color(0xFF212529);
-  static const Color textSecondary = Color(0xFF6C757D);
+  static const Color textPrimary = Color(0xFFF8F9FA); // Light Text
+  static const Color textSecondary = Color(0xFFADB5BD); // Muted Text
+
+  // Gradients
+  static const LinearGradient mainGradient = LinearGradient(
+    colors: [Color(0xFF0F2027), Color(0xFF203A43), Color(0xFF2C5364)],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
+
+  static const LinearGradient cardGradient = LinearGradient(
+    colors: [Colors.white10, Colors.white24],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
 
   // Text Styles
   static const TextStyle heading1 = TextStyle(
@@ -25,7 +35,7 @@ class AppTheme {
 
   static const TextStyle heading2 = TextStyle(
     fontFamily: Constants.fontTajawal,
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: FontWeight.w600,
     color: textPrimary,
   );
@@ -37,22 +47,23 @@ class AppTheme {
     height: 1.5,
   );
 
-  static const TextStyle caption = TextStyle(
-    fontFamily: Constants.fontTajawal,
-    fontSize: 14,
-    color: textSecondary,
-  );
-
   // Theme Data
   static ThemeData get lightTheme {
     return ThemeData(
       useMaterial3: true,
+      brightness: Brightness.dark,
       primaryColor: primaryColor,
       scaffoldBackgroundColor: backgroundColor,
+
       fontFamily: Constants.fontTajawal,
+      textTheme: const TextTheme().apply(
+        fontFamily: Constants.fontTajawal,
+        bodyColor: textPrimary,
+        displayColor: textPrimary,
+      ),
 
       appBarTheme: const AppBarTheme(
-        backgroundColor: primaryColor,
+        backgroundColor: Colors.transparent,
         foregroundColor: Colors.white,
         centerTitle: true,
         elevation: 0,
@@ -63,41 +74,37 @@ class AppTheme {
           fontWeight: FontWeight.bold,
           color: Colors.white,
         ),
-        iconTheme: IconThemeData(color: Colors.white),
       ),
 
       cardTheme: CardThemeData(
-        color: surfaceColor,
-        elevation: 2,
-        shadowColor: Colors.black.withOpacity(0.1),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+        color: Colors.white.withValues(alpha: 0.05),
+        elevation: 0,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(24),
+          side: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
+        ),
       ),
 
-      iconTheme: const IconThemeData(color: primaryColor),
-
-      colorScheme: const ColorScheme.light(
+      colorScheme: ColorScheme.dark(
         primary: primaryColor,
         secondary: secondaryColor,
         surface: surfaceColor,
-        background: backgroundColor,
-        error: errorColor,
+        error: Colors.redAccent,
         onPrimary: Colors.white,
         onSecondary: Colors.white,
       ),
 
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
-          backgroundColor: primaryColor,
-          foregroundColor: Colors.white,
+          backgroundColor: secondaryColor,
+          foregroundColor: primaryColor,
           textStyle: const TextStyle(
             fontFamily: Constants.fontTajawal,
             fontWeight: FontWeight.bold,
           ),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(30),
           ),
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
         ),
       ),
     );

@@ -8,6 +8,7 @@ class QudsiModel extends Qudsi {
     required super.bookId,
     required super.arabic,
     required super.english,
+    super.title,
   });
 
   factory QudsiModel.fromJson(Map<String, dynamic> json) {
@@ -18,6 +19,7 @@ class QudsiModel extends Qudsi {
       bookId: json['bookId'] ?? 0,
       arabic: json['arabic'] ?? "",
       english: English.fromJson(json['english'] ?? {}),
+      title: json['title'],
     );
   }
 }

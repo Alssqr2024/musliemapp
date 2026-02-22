@@ -1,5 +1,6 @@
 class Nawawi {
   String description;
   String hadith;
-  Nawawi({required this.description, required this.hadith});
+  String? title;
+  Nawawi({required this.description, required this.hadith, this.title});
 }

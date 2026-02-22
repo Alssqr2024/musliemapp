@@ -37,6 +37,21 @@ dependencies:
   get: ^4.7.2
   dashed_circular_progress_bar: ^0.0.6
   share_plus: ^12.0.1
+  quran_library: ^3.0.1
+  adhan: ^2.0.0+1
+  geolocator: ^13.0.1
+  intl: ^0.20.1
+  flutter_qiblah: ^3.1.0+1
+  shared_preferences: ^2.3.2
+  hijri: ^3.0.0
+  flutter_staggered_grid_view: ^0.7.0
+  flutter_local_notifications: ^18.0.1
+  timezone: ^0.10.0
+  flutter_timezone: ^3.0.1
+  http: ^1.4.0
+
+
+
 
 dev_dependencies:
   flutter_test:
