@@ -1,10 +1,8 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-
-import '../../data/datasources/stories_local_data.dart';
-import '../../data/repositories/stories_repo_impl.dart';
-import '../../domain/usecases/stories_usecase.dart';
+import 'package:musliemapp/core/bindings/stories_binding.dart';
+import 'package:musliemapp/features/stories/domain/usecases/stories_usecase.dart';
 import '../controllers/stories_controller.dart';
 import 'show_item_page.dart';
 
@@ -20,14 +18,16 @@ class StoriesPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final controller = Get.put(
-      StoriesController(
-        storiesUseCase: StoriesUseCase(
-          repo: StoriesRepoImpl(localData: StoriesLocalData()),
-        ),
-      ),
-      tag: category,
-    );
+    if (!Get.isRegistered<StoriesUseCase>()) {
+      StoriesBinding().dependencies();
+    }
+    if (!Get.isRegistered<StoriesController>(tag: category)) {
+      Get.put(
+        StoriesController(storiesUseCase: Get.find<StoriesUseCase>()),
+        tag: category,
+      );
+    }
+    final controller = Get.find<StoriesController>(tag: category);
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       controller.fetchStories(category);

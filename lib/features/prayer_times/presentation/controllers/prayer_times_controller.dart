@@ -8,6 +8,8 @@ import 'package:http/http.dart' as http;
 import 'package:hijri/hijri_calendar.dart';
 import 'package:flutter/material.dart';
 import 'package:musliemapp/core/services/notification_service.dart';
+import 'package:musliemapp/core/services/logger_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class PrayerTimesController extends GetxController {
   final RxBool isLoading = true.obs;
@@ -99,7 +101,7 @@ class PrayerTimesController extends GetxController {
         }
       } catch (locError) {
         // Fallback to Mecca if GPS fails
-        print('Location detection failed: $locError');
+        LoggerService.warning('Location detection failed, using Mecca as fallback', 'PrayerTimes');
         errorMessage.value =
             'تعذّر تحديد الموقع تلقائياً. تم استخدام توقيت مكة المكرمة كافتراضي. يرجى التأكد من الـ GPS.';
         position = Position(
@@ -118,6 +120,7 @@ class PrayerTimesController extends GetxController {
       }
 
       _lastCoordinates = Coordinates(position.latitude, position.longitude);
+      _saveCoordinatesForReschedule(position.latitude, position.longitude);
       final params = CalculationMethod.muslim_world_league.getParameters();
       params.madhab = Madhab.shafi;
 
@@ -139,7 +142,8 @@ class PrayerTimesController extends GetxController {
 
       _startTimer();
     } catch (e) {
-      errorMessage.value = 'حدث خطأ غير متوقع: ${e.toString()}';
+      LoggerService.error('Error loading prayer times', e, StackTrace.current, 'PrayerTimes');
+      errorMessage.value = 'حدث خطأ غير متوقع. يرجى المحاولة مرة أخرى.';
     } finally {
       isLoading.value = false;
     }
@@ -148,35 +152,53 @@ class PrayerTimesController extends GetxController {
   DateTime? _lastScheduledDay;
   bool _needsReschedule() {
     final now = DateTime.now();
-    if (_lastScheduledDay == null ||
-        _lastScheduledDay!.day != now.day ||
-        _lastScheduledDay!.month != now.month) {
-      return true;
-    }
-    return false;
+    if (_lastScheduledDay == null) return true;
+    final daysSinceScheduled = now.difference(_lastScheduledDay!).inDays;
+    return daysSinceScheduled >= _daysToSchedule - 1;
+  }
+
+  static const int _daysToSchedule = 7;
+  static const String _keyLat = 'prayer_last_lat';
+  static const String _keyLon = 'prayer_last_lon';
+
+  Future<void> _saveCoordinatesForReschedule(double lat, double lon) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setDouble(_keyLat, lat);
+      await prefs.setDouble(_keyLon, lon);
+    } catch (_) {}
   }
 
   void _scheduleNotifications() {
-    if (_prayerTimes == null) return;
+    if (_prayerTimes == null || _lastCoordinates == null) return;
 
     final notificationService = NotificationService();
     notificationService.cancelAllNotifications();
 
-    final prayers = [
-      {'id': 1, 'name': 'الفجر', 'time': _prayerTimes!.fajr},
-      {'id': 2, 'name': 'الظهر', 'time': _prayerTimes!.dhuhr},
-      {'id': 3, 'name': 'العصر', 'time': _prayerTimes!.asr},
-      {'id': 4, 'name': 'المغرب', 'time': _prayerTimes!.maghrib},
-      {'id': 5, 'name': 'العشاء', 'time': _prayerTimes!.isha},
-    ];
+    final params = CalculationMethod.muslim_world_league.getParameters();
+    params.madhab = Madhab.shafi;
+    const prayerNames = ['الفجر', 'الظهر', 'العصر', 'المغرب', 'العشاء'];
 
-    for (final p in prayers) {
-      notificationService.schedulePrayerNotification(
-        id: p['id'] as int,
-        title: 'حان الآن موعد صلاة ${p['name']}',
-        body: 'أقم صلاتك يا رعاك الله',
-        scheduledDate: p['time'] as DateTime,
-      );
+    for (int dayOffset = 0; dayOffset < _daysToSchedule; dayOffset++) {
+      final date = DateTime.now().add(Duration(days: dayOffset));
+      final dateComponents = DateComponents.from(date);
+      final dayPrayerTimes = PrayerTimes(_lastCoordinates!, dateComponents, params);
+      final times = [
+        dayPrayerTimes.fajr,
+        dayPrayerTimes.dhuhr,
+        dayPrayerTimes.asr,
+        dayPrayerTimes.maghrib,
+        dayPrayerTimes.isha,
+      ];
+      for (int i = 0; i < 5; i++) {
+        final id = dayOffset * 10 + (i + 1);
+        notificationService.schedulePrayerNotification(
+          id: id,
+          title: 'حان الآن موعد صلاة ${prayerNames[i]}',
+          body: 'أقم صلاتك يا رعاك الله',
+          scheduledDate: times[i],
+        );
+      }
     }
     _lastScheduledDay = DateTime.now();
   }

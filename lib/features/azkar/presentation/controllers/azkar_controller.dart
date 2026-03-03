@@ -1,15 +1,14 @@
 import 'package:get/get.dart';
+import 'package:musliemapp/core/controllers/base_controller.dart';
 import 'package:musliemapp/features/azkar/domain/usecases/azkar_usecase.dart';
 import 'package:musliemapp/features/azkar/domain/entities/azkar.dart';
 
-class AzkarController extends GetxController {
+class AzkarController extends BaseController {
   final AzkarUsecase azkarUseCase;
 
   AzkarController({required this.azkarUseCase});
 
-  var isLoading = true.obs;
   var azkarList = <Azkar>[].obs;
-  var errorMessage = ''.obs;
 
   @override
   void onInit() {
@@ -17,15 +16,16 @@ class AzkarController extends GetxController {
     fetchAzkar();
   }
 
-  void fetchAzkar() async {
+  Future<void> fetchAzkar() async {
     try {
-      isLoading(true);
+      setLoading(true);
+      clearError();
       var result = await azkarUseCase.call();
       azkarList.assignAll(result);
     } catch (e) {
-      errorMessage(e.toString());
+      handleError(e, 'fetchAzkar');
     } finally {
-      isLoading(false);
+      setLoading(false);
     }
   }
 }

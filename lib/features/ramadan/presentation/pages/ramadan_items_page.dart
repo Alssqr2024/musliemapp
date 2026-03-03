@@ -1,9 +1,7 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-
-import 'package:musliemapp/features/ramadan/data/datasources/ramadan_local_data.dart';
-import 'package:musliemapp/features/ramadan/data/repositories/ramadan_repo_impl.dart';
+import 'package:musliemapp/core/bindings/ramadan_binding.dart';
 import 'package:musliemapp/features/ramadan/domain/usecases/get_ramadan_items_usecase.dart';
 import 'package:musliemapp/features/ramadan/presentation/controllers/ramadan_controller.dart';
 import 'package:musliemapp/features/stories/presentation/pages/show_item_page.dart';
@@ -20,14 +18,16 @@ class RamadanItemsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final controller = Get.put(
-      RamadanController(
-        getRamadanItemsUseCase: GetRamadanItemsUseCase(
-          ramadanRepo: RamadanRepoImpl(localData: RamadanLocalData()),
-        ),
-      ),
-      tag: jsonFile,
-    );
+    if (!Get.isRegistered<GetRamadanItemsUseCase>()) {
+      RamadanBinding().dependencies();
+    }
+    if (!Get.isRegistered<RamadanController>(tag: jsonFile)) {
+      Get.put(
+        RamadanController(getRamadanItemsUseCase: Get.find<GetRamadanItemsUseCase>()),
+        tag: jsonFile,
+      );
+    }
+    final controller = Get.find<RamadanController>(tag: jsonFile);
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       controller.fetchItems(jsonFile);

@@ -10,7 +10,8 @@ class PrayerTimesPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final controller = Get.put(PrayerTimesController());
+    // Controller is already initialized via AppBindings
+    final controller = Get.find<PrayerTimesController>();
 
     return Scaffold(
       backgroundColor: AppTheme.backgroundColor,

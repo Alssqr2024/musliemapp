@@ -1,9 +1,7 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-
-import 'package:musliemapp/features/another/data/datasources/another_local_data.dart';
-import 'package:musliemapp/features/another/data/repositories/another_repo_impl.dart';
+import 'package:musliemapp/core/bindings/another_binding.dart';
 import 'package:musliemapp/features/another/domain/usecases/get_another_items_usecase.dart';
 import 'package:musliemapp/features/another/presentation/controllers/another_controller.dart';
 import 'package:musliemapp/features/stories/presentation/pages/show_item_page.dart';
@@ -20,14 +18,16 @@ class AnotherItemsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final controller = Get.put(
-      AnotherController(
-        getAnotherItemsUseCase: GetAnotherItemsUseCase(
-          anotherRepo: AnotherRepoImpl(localData: AnotherLocalData()),
-        ),
-      ),
-      tag: jsonFile,
-    );
+    if (!Get.isRegistered<GetAnotherItemsUseCase>()) {
+      AnotherBinding().dependencies();
+    }
+    if (!Get.isRegistered<AnotherController>(tag: jsonFile)) {
+      Get.put(
+        AnotherController(getAnotherItemsUseCase: Get.find<GetAnotherItemsUseCase>()),
+        tag: jsonFile,
+      );
+    }
+    final controller = Get.find<AnotherController>(tag: jsonFile);
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       controller.fetchItems(jsonFile);

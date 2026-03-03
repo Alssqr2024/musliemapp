@@ -1,5 +1,5 @@
 name: musliemapp
-description: "A new Flutter project."
+description: "تطبيق أذكار المسلم - تطبيق إسلامي شامل يحتوي على مواقيت الصلاة، الأذكار، الأحاديث، القرآن الكريم والمزيد"
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
@@ -49,6 +49,8 @@ dependencies:
   timezone: ^0.10.0
   flutter_timezone: ^3.0.1
   http: ^1.4.0
+  url_launcher: ^6.3.0
+  android_intent_plus: ^5.1.0
 
 
 

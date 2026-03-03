@@ -1,9 +1,7 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:musliemapp/features/azkar/data/datasources/azkar_local_data.dart';
-import 'package:musliemapp/features/azkar/data/repositories/azkar_repo_impl.dart';
-import 'package:musliemapp/features/azkar/domain/usecases/azkar_usecase.dart';
+import 'package:musliemapp/core/bindings/azkar_binding.dart';
 import 'package:musliemapp/features/azkar/presentation/controllers/azkar_controller.dart';
 import 'package:musliemapp/features/azkar/presentation/pages/show_azkar_page.dart';
 import 'package:musliemapp/utils/widgets/card_home.dart';
@@ -13,13 +11,11 @@ class AzkarPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final controller = Get.put(
-      AzkarController(
-        azkarUseCase: AzkarUsecase(
-          azkarRepo: AzkarRepoImpl(localData: AzkarLocalData()),
-        ),
-      ),
-    );
+    // Initialize binding if not already done
+    if (!Get.isRegistered<AzkarController>()) {
+      AzkarBinding().dependencies();
+    }
+    final controller = Get.find<AzkarController>();
 
     return Scaffold(
       backgroundColor: const Color(0xFF0F2027),

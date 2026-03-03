@@ -2,9 +2,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:musliemapp/core/theme/app_theme.dart';
-import 'package:musliemapp/features/hadith/data/datasources/hadith_local_data.dart';
-import 'package:musliemapp/features/hadith/data/repositories/shamail_repo_impl.dart';
-import 'package:musliemapp/features/hadith/domain/usecases/shamail_usecase.dart';
+import 'package:musliemapp/core/bindings/hadith_bindings.dart';
 import 'package:musliemapp/features/hadith/presentation/controllers/shamail_controller.dart';
 import 'package:musliemapp/features/stories/presentation/pages/show_item_page.dart';
 
@@ -13,13 +11,11 @@ class ShamailPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final controller = Get.put(
-      ShamailController(
-        shamailUseCase: ShamailUseCase(
-          shamailRepo: ShamailRepoImpl(localData: HadithLocalData()),
-        ),
-      ),
-    );
+    // Initialize binding if not already done
+    if (!Get.isRegistered<ShamailController>()) {
+      HadithBindings().dependencies();
+    }
+    final controller = Get.find<ShamailController>();
 
     return Scaffold(
       backgroundColor: AppTheme.backgroundColor,

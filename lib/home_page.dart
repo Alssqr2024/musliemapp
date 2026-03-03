@@ -5,15 +5,50 @@ import 'package:musliemapp/core/theme/app_theme.dart';
 import 'package:musliemapp/features/prayer_times/presentation/controllers/prayer_times_controller.dart';
 import 'package:musliemapp/utils/widgets/mosque_calendar_card.dart';
 import 'package:musliemapp/services_page.dart';
+import 'dart:io' show Platform;
+import 'package:url_launcher/url_launcher.dart';
+import 'package:android_intent_plus/android_intent.dart';
+
+void _showAboutBottomSheet(BuildContext context) {
+  Get.bottomSheet(
+    Container(
+      margin: const EdgeInsets.all(16),
+      padding: EdgeInsets.only(
+        left: 16,
+        right: 16,
+        top: 16,
+        bottom: MediaQuery.of(context).padding.bottom + 16,
+      ),
+      decoration: BoxDecoration(
+        color: AppTheme.backgroundColor,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.1),
+          width: 1,
+        ),
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(24),
+        child: const SingleChildScrollView(
+          child: _AboutAppCard(),
+        ),
+      ),
+    ),
+    isScrollControlled: true,
+    backgroundColor: Colors.transparent,
+    ignoreSafeArea: false,
+    isDismissible: true,
+    enableDrag: true,
+  );
+}
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final PrayerTimesController prayerController = Get.put(
-      PrayerTimesController(),
-    );
+    // Controller is already initialized via AppBindings
+    final PrayerTimesController prayerController = Get.find<PrayerTimesController>();
 
     return Scaffold(
       body: Stack(
@@ -40,7 +75,7 @@ class HomePage extends StatelessWidget {
                   child: SingleChildScrollView(
                     physics: const BouncingScrollPhysics(),
                     padding: const EdgeInsets.only(bottom: 24),
-                    child: _buildHeader(prayerController),
+                    child: _buildHeader(context, prayerController),
                   ),
                 ),
                 const _ExploreButton(),
@@ -48,6 +83,155 @@ class HomePage extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// رقم واتساب المطور (مع رمز الدولة بدون + أو 0)
+const String _developerWhatsAppNumber = '966501436049';
+
+class _AboutAppCard extends StatelessWidget {
+  const _AboutAppCard();
+
+  Future<void> _openWhatsApp() async {
+    const String message =
+        'السلام عليكم ، أتواصل بخصوص تطبيق أذكار المسلم';
+    final String waUrl =
+        'https://wa.me/$_developerWhatsAppNumber?text=${Uri.encodeComponent(message)}';
+
+    try {
+      if (Platform.isAndroid) {
+        final intent = AndroidIntent(
+          action: 'android.intent.action.VIEW',
+          data: waUrl,
+          package: 'com.whatsapp',
+        );
+        await intent.launch();
+      } else {
+        await launchUrl(
+          Uri.parse(waUrl),
+          mode: LaunchMode.externalApplication,
+        );
+      }
+    } catch (_) {
+      try {
+        await launchUrl(
+          Uri.parse(waUrl),
+          mode: LaunchMode.platformDefault,
+        );
+      } catch (_) {}
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(24),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.08),
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(
+              color: Colors.white.withValues(alpha: 0.15),
+              width: 1,
+            ),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(Icons.info_outline_rounded, color: AppTheme.secondaryColor, size: 22),
+                  const SizedBox(width: 8),
+                  Text(
+                    'عن التطبيق والمطور',
+                    style: TextStyle(
+                      color: AppTheme.secondaryColor,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      fontFamily: 'Tajawal',
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'أذكار المسلم تطبيق إسلامي شامل يوفّر مواقيت الصلاة، الأذكار، الأحاديث، القرآن الكريم، اتجاه القبلة، وأدعية مستجابة. صُمم ليكون مرافقك اليومي في الذكر والدعاء.',
+                style: TextStyle(
+                  color: Colors.white.withValues(alpha: 0.9),
+                  fontSize: 14,
+                  height: 1.6,
+                  fontFamily: 'Tajawal',
+                ),
+                textAlign: TextAlign.right,
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'المطور',
+                style: TextStyle(
+                  color: Colors.white.withValues(alpha: 0.7),
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  fontFamily: 'Tajawal',
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'تم التطوير بعناية لخدمة المحتوى الإسلامي الموثوق. للاقتراحات أو الاستفسارات تواصل معنا عبر واتساب.',
+                style: TextStyle(
+                  color: Colors.white.withValues(alpha: 0.6),
+                  fontSize: 13,
+                  height: 1.5,
+                  fontFamily: 'Tajawal',
+                ),
+                textAlign: TextAlign.right,
+              ),
+              const SizedBox(height: 20),
+              SizedBox(
+                width: double.infinity,
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: _openWhatsApp,
+                    borderRadius: BorderRadius.circular(16),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF25D366).withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: const Color(0xFF25D366).withValues(alpha: 0.5),
+                          width: 1,
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.chat_rounded, color: Color(0xFF25D366), size: 24),
+                          const SizedBox(width: 10),
+                          Text(
+                            'تواصل عبر واتساب',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              fontFamily: 'Tajawal',
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -117,7 +301,7 @@ class _ExploreButton extends StatelessWidget {
 }
 
 extension on HomePage {
-  Widget _buildHeader(PrayerTimesController controller) {
+  Widget _buildHeader(BuildContext context, PrayerTimesController controller) {
     return Container(
       padding: const EdgeInsets.only(top: 60, left: 20, right: 20),
       child: Column(
@@ -143,26 +327,34 @@ extension on HomePage {
                   ),
                 ],
               ),
-              ClipRRect(
-                borderRadius: BorderRadius.circular(15),
-                child: BackdropFilter(
-                  filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-                  child: Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(15),
-                      border: Border.all(
-                        color: Colors.white.withValues(alpha: 0.2),
-                        width: 1,
+              IconButton(
+                onPressed: () => _showAboutBottomSheet(context),
+                icon: ClipRRect(
+                  borderRadius: BorderRadius.circular(15),
+                  child: BackdropFilter(
+                    filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                    child: Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(15),
+                        border: Border.all(
+                          color: Colors.white.withValues(alpha: 0.2),
+                          width: 1,
+                        ),
+                      ),
+                      child: const Icon(
+                        Icons.mosque,
+                        color: Colors.white,
+                        size: 24,
                       ),
                     ),
-                    child: const Icon(
-                      Icons.mosque,
-                      color: Colors.white,
-                      size: 24,
-                    ),
                   ),
+                ),
+                style: IconButton.styleFrom(
+                  padding: EdgeInsets.zero,
+                  minimumSize: const Size(48, 48),
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                 ),
               ),
             ],

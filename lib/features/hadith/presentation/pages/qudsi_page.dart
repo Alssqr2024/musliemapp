@@ -2,10 +2,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:musliemapp/core/theme/app_theme.dart';
-
-import 'package:musliemapp/features/hadith/data/datasources/hadith_local_data.dart';
-import 'package:musliemapp/features/hadith/data/repositories/qudsi_repo_impl.dart';
-import 'package:musliemapp/features/hadith/domain/usecases/qudsi_usecase.dart';
+import 'package:musliemapp/core/bindings/hadith_bindings.dart';
 import 'package:musliemapp/features/hadith/presentation/controllers/qudsi_controller.dart';
 import 'package:musliemapp/features/stories/presentation/pages/show_item_page.dart';
 
@@ -14,13 +11,11 @@ class QudsiPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final controller = Get.put(
-      QudsiController(
-        qudsiUseCase: QudsiUseCase(
-          qudsiRepo: QudsiRepoImpl(localData: HadithLocalData()),
-        ),
-      ),
-    );
+    // Initialize binding if not already done
+    if (!Get.isRegistered<QudsiController>()) {
+      HadithBindings().dependencies();
+    }
+    final controller = Get.find<QudsiController>();
 
     return Scaffold(
       backgroundColor: AppTheme.backgroundColor,

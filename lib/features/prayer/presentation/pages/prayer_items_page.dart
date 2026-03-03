@@ -1,9 +1,7 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-
-import 'package:musliemapp/features/prayer/data/datasources/prayer_local_data.dart';
-import 'package:musliemapp/features/prayer/data/repositories/prayer_repo_impl.dart';
+import 'package:musliemapp/core/bindings/prayer_binding.dart';
 import 'package:musliemapp/features/prayer/domain/usecases/get_prayer_items_usecase.dart';
 import 'package:musliemapp/features/prayer/presentation/controllers/prayer_controller.dart';
 import 'package:musliemapp/features/stories/presentation/pages/show_item_page.dart';
@@ -20,14 +18,16 @@ class PrayerItemsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final controller = Get.put(
-      PrayerController(
-        getPrayerItemsUseCase: GetPrayerItemsUseCase(
-          prayerRepo: PrayerRepoImpl(localData: PrayerLocalData()),
-        ),
-      ),
-      tag: jsonFile,
-    );
+    if (!Get.isRegistered<GetPrayerItemsUseCase>()) {
+      PrayerBinding().dependencies();
+    }
+    if (!Get.isRegistered<PrayerController>(tag: jsonFile)) {
+      Get.put(
+        PrayerController(getPrayerItemsUseCase: Get.find<GetPrayerItemsUseCase>()),
+        tag: jsonFile,
+      );
+    }
+    final controller = Get.find<PrayerController>(tag: jsonFile);
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       controller.fetchItems(jsonFile);

@@ -1,16 +1,13 @@
-import 'dart:convert';
-import 'package:flutter/services.dart';
+import 'package:musliemapp/core/utils/json_loader.dart';
 import 'package:musliemapp/utils/constants/file_json.dart';
 import 'package:musliemapp/features/stories/data/models/story_model.dart';
 
 class StoriesLocalData {
   Future<List<StoryModel>> _getStories(String jsonFile) async {
+    final data = await JsonLoader.loadList(jsonFile);
     try {
-      final jsonstring = await rootBundle.loadString(jsonFile);
-      List<dynamic> data = jsonDecode(jsonstring);
-      return data.map((e) => StoryModel.fromJson(e)).toList();
-    } catch (e) {
-      print("Error loading $jsonFile: $e");
+      return data.map((e) => StoryModel.fromJson(e as Map<String, dynamic>)).toList();
+    } catch (_) {
       return [];
     }
   }

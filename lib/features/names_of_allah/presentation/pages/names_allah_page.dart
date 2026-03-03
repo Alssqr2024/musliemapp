@@ -2,9 +2,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:musliemapp/core/theme/app_theme.dart';
-import 'package:musliemapp/features/names_of_allah/data/datasources/names_allah_local_data.dart';
-import 'package:musliemapp/features/names_of_allah/data/repositories/names_allah_repo_impl.dart';
-import 'package:musliemapp/features/names_of_allah/domain/usecases/names_allah_usecase.dart';
+import 'package:musliemapp/core/bindings/names_allah_binding.dart';
 import 'package:musliemapp/features/names_of_allah/presentation/controllers/names_allah_controller.dart';
 
 class NamesAllahPage extends StatelessWidget {
@@ -12,13 +10,11 @@ class NamesAllahPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final controller = Get.put(
-      NamesAllahController(
-        namesAllahUseCase: NamesAllahUsecase(
-          namesAllahRepo: NamesAllahRepoImpl(localData: NamesAllahLocalData()),
-        ),
-      ),
-    );
+    // Initialize binding if not already done
+    if (!Get.isRegistered<NamesAllahController>()) {
+      NamesAllahBinding().dependencies();
+    }
+    final controller = Get.find<NamesAllahController>();
 
     return Scaffold(
       backgroundColor: const Color(0xFF0F2027),
