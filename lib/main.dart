@@ -10,7 +10,8 @@ import 'package:intl/date_symbol_data_local.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await initializeDateFormatting('ar', null);
-  await NotificationService().init();
+  final notificationService = NotificationService();
+  await notificationService.init();
   await QuranLibrary.init();
   runApp(const MainApp());
 }

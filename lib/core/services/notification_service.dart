@@ -2,6 +2,9 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 import 'package:flutter_timezone/flutter_timezone.dart';
+import 'package:android_intent_plus/android_intent.dart';
+import 'package:android_intent_plus/flag.dart';
+import 'package:flutter/foundation.dart';
 
 class NotificationService {
   static final NotificationService _instance = NotificationService._internal();
@@ -40,11 +43,28 @@ class NotificationService {
     );
 
     // 5. Request Permissions for Android 13+
-    _notificationsPlugin
-        .resolvePlatformSpecificImplementation<
-          AndroidFlutterLocalNotificationsPlugin
-        >()
-        ?.requestNotificationsPermission();
+    final androidPlugin = _notificationsPlugin.resolvePlatformSpecificImplementation<
+        AndroidFlutterLocalNotificationsPlugin>();
+
+    if (androidPlugin != null) {
+      await androidPlugin.requestNotificationsPermission();
+      await androidPlugin.requestExactAlarmsPermission();
+    }
+
+  }
+
+  Future<void> requestBatteryOptimizationExemption() async {
+    if (defaultTargetPlatform == TargetPlatform.android) {
+      try {
+        const intent = AndroidIntent(
+          action: 'android.settings.IGNORE_BATTERY_OPTIMIZATION_SETTINGS',
+          flags: <int>[Flag.FLAG_ACTIVITY_NEW_TASK],
+        );
+        await intent.launch();
+      } catch (e) {
+        debugPrint('Failed to open battery optimization settings: $e');
+      }
+    }
   }
 
   Future<void> schedulePrayerNotification({

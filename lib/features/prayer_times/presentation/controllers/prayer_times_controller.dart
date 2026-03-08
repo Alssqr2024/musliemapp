@@ -11,6 +11,8 @@ import 'package:musliemapp/core/services/notification_service.dart';
 import 'package:musliemapp/core/services/logger_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:musliemapp/core/theme/app_theme.dart';
+
 class PrayerTimesController extends GetxController {
   final RxBool isLoading = true.obs;
   final RxString errorMessage = ''.obs;
@@ -49,6 +51,199 @@ class PrayerTimesController extends GetxController {
     super.onInit();
     _calculateCalendarExtras();
     loadPrayerTimes();
+    _checkBatteryOptimization();
+  }
+
+  Future<void> _checkBatteryOptimization() async {
+    final prefs = await SharedPreferences.getInstance();
+    final bool hasShown = prefs.getBool('battery_optimization_dialog_shown') ?? false;
+    final bool isGpsEnabled = await Geolocator.isLocationServiceEnabled();
+    
+    // Only show battery dialog if the user doesn't also need the GPS dialog
+    // We don't want to overwhelm them with two dialogues at once.
+    if (!hasShown && isGpsEnabled) {
+      await Future.delayed(const Duration(seconds: 2));
+      _showBatteryOptimizationDialog();
+      await prefs.setBool('battery_optimization_dialog_shown', true);
+    }
+  }
+
+  void _showBatteryOptimizationDialog() {
+    Get.dialog(
+      Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        backgroundColor: AppTheme.backgroundColor,
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: AppTheme.secondaryColor.withValues(alpha: 0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.battery_alert_rounded, color: AppTheme.secondaryColor, size: 40),
+              ),
+              const SizedBox(height: 20),
+              const Text(
+                'تنبيهات مواقيت الصلاة',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  fontFamily: 'Tajawal',
+                ),
+              ),
+              const SizedBox(height: 12),
+              const Text(
+                'لضمان عمل أذان الصلاة بدقة في وقته حتى عندما يكون الهاتف مغلقاً أو في وضع السكون، يرجى استثناء التطبيق من "تحسين البطارية" (Battery Optimization) في إعدادات جهازك.',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: Colors.white70,
+                  fontSize: 14,
+                  height: 1.5,
+                  fontFamily: 'Tajawal',
+                ),
+              ),
+              const SizedBox(height: 24),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppTheme.primaryColor,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                  ),
+                  onPressed: () {
+                    Get.back();
+                    NotificationService().requestBatteryOptimizationExemption();
+                  },
+                  child: const Text(
+                    'الانتقال للإعدادات',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      fontFamily: 'Tajawal',
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 8),
+              TextButton(
+                onPressed: () => Get.back(),
+                child: const Text(
+                  'لاحقاً',
+                  style: TextStyle(
+                    color: Colors.white54,
+                    fontSize: 14,
+                    fontFamily: 'Tajawal',
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+      barrierDismissible: false,
+    );
+  }
+
+  void _showGpsEnableDialog() {
+    Get.dialog(
+      Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        backgroundColor: AppTheme.backgroundColor,
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: AppTheme.secondaryColor.withValues(alpha: 0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.location_off_rounded, color: AppTheme.secondaryColor, size: 40),
+              ),
+              const SizedBox(height: 20),
+              const Text(
+                'تفعيل الموقع (GPS)',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  fontFamily: 'Tajawal',
+                ),
+              ),
+              const SizedBox(height: 12),
+              const Text(
+                'للحصول على مواقيت الصلاة الدقيقة لمنطقتك بشكل تلقائي، يرجى تفعيل خدمة تحديد الموقع (GPS) في إعدادات جهازك.',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: Colors.white70,
+                  fontSize: 14,
+                  height: 1.5,
+                  fontFamily: 'Tajawal',
+                ),
+              ),
+              const SizedBox(height: 24),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppTheme.primaryColor,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                  ),
+                  onPressed: () async {
+                    Get.back();
+                    await Geolocator.openLocationSettings();
+                    // Give user time to enable, then retry
+                    Future.delayed(const Duration(seconds: 3), () {
+                      loadPrayerTimes();
+                    });
+                  },
+                  child: const Text(
+                    'تفعيل الآن',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      fontFamily: 'Tajawal',
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 8),
+              TextButton(
+                onPressed: () {
+                  Get.back();
+                  // Check battery optimization later since they dismissed GPS for now
+                  _checkBatteryOptimization(); 
+                },
+                child: const Text(
+                  'التكملة بتوقيت مكة الافتراضي',
+                  style: TextStyle(
+                    color: Colors.white54,
+                    fontSize: 14,
+                    fontFamily: 'Tajawal',
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+      barrierDismissible: false,
+    );
   }
 
   @override
@@ -272,6 +467,7 @@ class PrayerTimesController extends GetxController {
   Future<Position> _determinePosition() async {
     bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) {
+      _showGpsEnableDialog();
       throw Exception('GPS disabled');
     }
 
@@ -292,10 +488,9 @@ class PrayerTimesController extends GetxController {
 
     // Use a more aggressive approach for Android if Play Services is problematic
     return await Geolocator.getCurrentPosition(
-      locationSettings: AndroidSettings(
-        accuracy: LocationAccuracy.medium,
-        timeLimit: const Duration(seconds: 10),
-        forceLocationManager: true, // Use standard Android location manager
+      locationSettings: const LocationSettings(
+        accuracy: LocationAccuracy.low,
+        timeLimit: Duration(seconds: 10),
       ),
     );
   }

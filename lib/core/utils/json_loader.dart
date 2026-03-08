@@ -12,7 +12,7 @@ class JsonLoader {
       final String raw = await rootBundle.loadString(assetPath);
       final decoded = jsonDecode(raw);
       if (decoded is! List) return [];
-      return decoded as List<dynamic>;
+      return decoded;
     } catch (e, st) {
       LoggerService.error(
         'JsonLoader.loadList failed: $assetPath',
