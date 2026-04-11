@@ -5,6 +5,7 @@ import 'package:get/get.dart';
 
 import 'package:share_plus/share_plus.dart';
 import 'package:musliemapp/features/azkar/domain/entities/azkar.dart';
+import 'package:musliemapp/utils/widgets/main_scaffold.dart';
 
 class ShowAzkarPage extends StatefulWidget {
   const ShowAzkarPage({super.key, required this.data, this.title});
@@ -70,26 +71,8 @@ class _ShowAzkarPageState extends State<ShowAzkarPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFF0F2027),
-      body: Stack(
-        children: [
-          // Background Gradient
-          Container(
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  Color(0xFF0F2027),
-                  Color(0xFF203A43),
-                  Color(0xFF2C5364),
-                ],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-            ),
-          ),
-
-          SafeArea(
+    return MainScaffold(
+      body: SafeArea(
             child: Column(
               children: [
                 // Custom Top Bar (Alternative to AppBar for more control)
@@ -111,10 +94,13 @@ class _ShowAzkarPageState extends State<ShowAzkarPage> {
                         child: Text(
                           widget.title ?? 'الأذكار',
                           textAlign: TextAlign.center,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
                           style: const TextStyle(
                             color: Colors.white,
                             fontWeight: FontWeight.bold,
-                            fontSize: 18,
+                            fontSize: 17,
+                            height: 1.2,
                             shadows: [
                               Shadow(blurRadius: 10, color: Colors.black26),
                             ],
@@ -144,22 +130,22 @@ class _ShowAzkarPageState extends State<ShowAzkarPage> {
                             child: Container(
                               padding: const EdgeInsets.all(24),
                               decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.05),
+                                color: Colors.white.withValues(alpha: 0.05),
                                 borderRadius: BorderRadius.circular(30),
                                 border: Border.all(
-                                  color: Colors.white.withOpacity(0.1),
+                                  color: Colors.white.withValues(alpha: 0.1),
                                 ),
                                 gradient: LinearGradient(
                                   colors: [
-                                    Colors.white.withOpacity(0.08),
-                                    Colors.white.withOpacity(0.02),
+                                    Colors.white.withValues(alpha: 0.08),
+                                    Colors.white.withValues(alpha: 0.02),
                                   ],
                                   begin: Alignment.topLeft,
                                   end: Alignment.bottomRight,
                                 ),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: Colors.black.withOpacity(0.2),
+                                    color: Colors.black.withValues(alpha: 0.2),
                                     blurRadius: 20,
                                     offset: const Offset(0, 10),
                                   ),
@@ -172,7 +158,7 @@ class _ShowAzkarPageState extends State<ShowAzkarPage> {
                                     Icons.auto_awesome_rounded,
                                     color: const Color(
                                       0xFFFFD700,
-                                    ).withOpacity(0.5),
+                                    ).withValues(alpha: 0.5),
                                     size: 30,
                                   ),
                                   const SizedBox(height: 16),
@@ -216,7 +202,7 @@ class _ShowAzkarPageState extends State<ShowAzkarPage> {
                                           child: Text(
                                             "التكرار المطلوب: $initialCount",
                                             style: TextStyle(
-                                              color: Colors.white.withOpacity(
+                                              color: Colors.white.withValues(alpha: 
                                                 0.5,
                                               ),
                                               fontSize: 13,
@@ -257,7 +243,7 @@ class _ShowAzkarPageState extends State<ShowAzkarPage> {
                       vertical: 4,
                     ),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.05),
+                      color: Colors.white.withValues(alpha: 0.05),
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Text(
@@ -276,8 +262,6 @@ class _ShowAzkarPageState extends State<ShowAzkarPage> {
               ],
             ),
           ),
-        ],
-      ),
     );
   }
 
@@ -290,7 +274,7 @@ class _ShowAzkarPageState extends State<ShowAzkarPage> {
       maxProgress: initialCount.toDouble(),
       corners: StrokeCap.round,
       foregroundColor: const Color(0xFFFFD700),
-      backgroundColor: Colors.white.withOpacity(0.05),
+      backgroundColor: Colors.white.withValues(alpha: 0.05),
       foregroundStrokeWidth: 8,
       backgroundStrokeWidth: 4,
       animation: true,
@@ -305,13 +289,13 @@ class _ShowAzkarPageState extends State<ShowAzkarPage> {
             alignment: Alignment.center,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: Colors.white.withOpacity(0.05),
+              color: Colors.white.withValues(alpha: 0.05),
               border: Border.all(
-                color: const Color(0xFFFFD700).withOpacity(0.3),
+                color: const Color(0xFFFFD700).withValues(alpha: 0.3),
               ),
               boxShadow: [
                 BoxShadow(
-                  color: const Color(0xFFFFD700).withOpacity(0.1),
+                  color: const Color(0xFFFFD700).withValues(alpha: 0.1),
                   blurRadius: 15,
                   spreadRadius: 2,
                 ),
@@ -357,8 +341,8 @@ class _ShowAzkarPageState extends State<ShowAzkarPage> {
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 24),
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.05),
-            border: Border.all(color: Colors.white.withOpacity(0.1)),
+            color: Colors.white.withValues(alpha: 0.05),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
             borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
           ),
           child: FittedBox(
@@ -378,6 +362,7 @@ class _ShowAzkarPageState extends State<ShowAzkarPage> {
                 ),
                 _buildControlBtn(
                   Icons.share_rounded,
+                  // ignore: deprecated_member_use
                   () => Share.share(_azkarList[indexItem].text),
                   "مشاركة",
                 ),
@@ -406,9 +391,9 @@ class _ShowAzkarPageState extends State<ShowAzkarPage> {
   ) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.05),
+        color: Colors.white.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white.withOpacity(0.05)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
       ),
       child: IconButton(
         onPressed: onPressed,

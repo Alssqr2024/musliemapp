@@ -4,6 +4,8 @@ import 'package:get/get.dart';
 import 'package:musliemapp/core/theme/app_theme.dart';
 import 'package:musliemapp/features/prayer_times/presentation/controllers/prayer_times_controller.dart';
 import 'package:musliemapp/core/services/notification_service.dart';
+import 'package:musliemapp/utils/widgets/main_scaffold.dart';
+import 'package:musliemapp/utils/widgets/premium_sliver_app_bar.dart';
 
 class PrayerTimesPage extends StatelessWidget {
   const PrayerTimesPage({super.key});
@@ -13,12 +15,67 @@ class PrayerTimesPage extends StatelessWidget {
     // Controller is already initialized via AppBindings
     final controller = Get.find<PrayerTimesController>();
 
-    return Scaffold(
-      backgroundColor: AppTheme.backgroundColor,
-      body: CustomScrollView(
-        physics: const BouncingScrollPhysics(),
-        slivers: [
-          _buildSliverHeader(controller),
+    return MainScaffold(
+      slivers: [
+        Obx(() => PremiumSliverAppBar(
+          title: 'مواقيت الصلاة',
+          icon: Icons.access_time_filled_rounded,
+          subtitle: controller.locationSource.value,
+          useCircledIcon: true,
+          expandedHeight: 220,
+          actions: [
+            IconButton(
+              icon: const Icon(
+                Icons.notifications_active_rounded,
+                color: AppTheme.secondaryColor,
+              ),
+              onPressed: () {
+                Get.defaultDialog(
+                  title: 'اختبار الإشعارات',
+                  titleStyle: const TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Tajawal'),
+                  middleText: 'يمكنك تجربة الإشعار فوراً، أو جدولته بعد 30 ثانية لتتمكن من إغلاق التطبيق والتأكد من عمله في الخلفية.',
+                  middleTextStyle: const TextStyle(fontFamily: 'Tajawal', height: 1.5),
+                  backgroundColor: AppTheme.backgroundColor,
+                  titlePadding: const EdgeInsets.only(top: 20, bottom: 10),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                  radius: 16,
+                  confirm: ElevatedButton(
+                    style: ElevatedButton.styleFrom(backgroundColor: AppTheme.primaryColor),
+                    onPressed: () async {
+                      Get.back();
+                      await NotificationService().sendTestNotification();
+                    },
+                    child: const Text('تجربة فورية', style: TextStyle(color: Colors.white, fontFamily: 'Tajawal')),
+                  ),
+                  cancel: OutlinedButton(
+                    style: OutlinedButton.styleFrom(side: const BorderSide(color: AppTheme.secondaryColor)),
+                    onPressed: () async {
+                      Get.back();
+                      await NotificationService().scheduleTestNotification(seconds: 30);
+                      Get.snackbar(
+                        'تمت الجدولة بنجاح ✔️',
+                        'قم بالخروج من التطبيق تماماً الآن وانتظر 30 ثانية لترى الإشعار.',
+                        backgroundColor: Colors.green.withValues(alpha: 0.8),
+                        colorText: Colors.white,
+                        snackPosition: SnackPosition.TOP,
+                        margin: const EdgeInsets.all(16),
+                        borderRadius: 12,
+                        duration: const Duration(seconds: 5),
+                      );
+                    },
+                    child: const Text('بعد 30 ثانية', style: TextStyle(color: AppTheme.secondaryColor, fontFamily: 'Tajawal')),
+                  ),
+                );
+              },
+              tooltip: 'اختبار الإشعار',
+            ),
+            IconButton(
+              icon: const Icon(Icons.refresh_rounded, color: Colors.white),
+              onPressed: controller.loadPrayerTimes,
+              tooltip: 'تحديث',
+            ),
+          ],
+        )),
           SliverToBoxAdapter(
             child: Obx(() {
               if (controller.isLoading.value) {
@@ -31,107 +88,7 @@ class PrayerTimesPage extends StatelessWidget {
             }),
           ),
           const SliverToBoxAdapter(child: SizedBox(height: 32)),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSliverHeader(PrayerTimesController controller) {
-    return SliverAppBar(
-      expandedHeight: 220,
-      pinned: true,
-      backgroundColor: AppTheme.backgroundColor,
-      elevation: 0,
-      foregroundColor: Colors.white,
-      actions: [
-        IconButton(
-          icon: const Icon(
-            Icons.notifications_active_rounded,
-            color: AppTheme.secondaryColor,
-          ),
-          onPressed: () async {
-            await NotificationService().sendTestNotification();
-            Get.snackbar(
-              '🔔 اختبار',
-              'ستظهر إشعار تجريبي خلال 5 ثوانٍ',
-              backgroundColor: AppTheme.secondaryColor.withOpacity(0.9),
-              colorText: const Color(0xFF0F2027),
-              snackPosition: SnackPosition.TOP,
-              margin: const EdgeInsets.all(16),
-              borderRadius: 12,
-            );
-          },
-          tooltip: 'اختبار الإشعار',
-        ),
-        IconButton(
-          icon: const Icon(Icons.refresh_rounded, color: Colors.white),
-          onPressed: controller.loadPrayerTimes,
-          tooltip: 'تحديث',
-        ),
       ],
-      flexibleSpace: FlexibleSpaceBar(
-        centerTitle: true,
-        title: const Text(
-          'مواقيت الصلاة',
-          style: TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-            fontSize: 18,
-          ),
-        ),
-        background: Stack(
-          fit: StackFit.expand,
-          children: [
-            Container(
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    Color(0xFF0F2027),
-                    Color(0xFF203A43),
-                    Color(0xFF2C5364),
-                  ],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-              ),
-            ),
-            Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const SizedBox(height: 20),
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: AppTheme.secondaryColor.withOpacity(0.1),
-                      border: Border.all(
-                        color: AppTheme.secondaryColor.withOpacity(0.3),
-                        width: 1.5,
-                      ),
-                    ),
-                    child: const Icon(
-                      Icons.access_time_filled_rounded,
-                      color: AppTheme.secondaryColor,
-                      size: 32,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  Obx(
-                    () => Text(
-                      controller.locationSource.value,
-                      style: TextStyle(
-                        color: Colors.white.withOpacity(0.6),
-                        fontSize: 12,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 
@@ -162,9 +119,9 @@ class PrayerTimesPage extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.all(32),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.05),
+                color: Colors.white.withValues(alpha: 0.05),
                 borderRadius: BorderRadius.circular(24),
-                border: Border.all(color: Colors.white.withOpacity(0.1)),
+                border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
               ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -245,13 +202,13 @@ class PrayerTimesPage extends StatelessWidget {
           width: double.infinity,
           padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.1),
+            color: Colors.white.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(24),
-            border: Border.all(color: Colors.white.withOpacity(0.1)),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
             gradient: LinearGradient(
               colors: [
-                Colors.white.withOpacity(0.1),
-                Colors.white.withOpacity(0.05),
+                Colors.white.withValues(alpha: 0.1),
+                Colors.white.withValues(alpha: 0.05),
               ],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
@@ -299,7 +256,7 @@ class PrayerTimesPage extends StatelessWidget {
                     borderRadius: BorderRadius.circular(30),
                     boxShadow: [
                       BoxShadow(
-                        color: AppTheme.secondaryColor.withOpacity(0.3),
+                        color: AppTheme.secondaryColor.withValues(alpha: 0.3),
                         blurRadius: 15,
                         spreadRadius: 2,
                       ),
@@ -332,9 +289,9 @@ class PrayerTimesPage extends StatelessWidget {
           margin: const EdgeInsets.only(bottom: 12),
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.05),
+            color: Colors.white.withValues(alpha: 0.05),
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Colors.white.withOpacity(0.05)),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
           ),
           child: Row(
             children: [
@@ -342,7 +299,7 @@ class PrayerTimesPage extends StatelessWidget {
                 width: 48,
                 height: 48,
                 decoration: BoxDecoration(
-                  color: AppTheme.secondaryColor.withOpacity(0.1),
+                  color: AppTheme.secondaryColor.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(14),
                 ),
                 child: Icon(icon, color: AppTheme.secondaryColor, size: 24),

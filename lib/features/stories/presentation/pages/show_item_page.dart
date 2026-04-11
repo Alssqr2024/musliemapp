@@ -2,6 +2,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:musliemapp/utils/widgets/main_scaffold.dart';
 
 class StoryItem {
   final String title;
@@ -74,26 +75,8 @@ class _ShowItemPageState extends State<ShowItemPage> {
   Widget build(BuildContext context) {
     final currentStory = widget.stories[currentIndex];
 
-    return Scaffold(
-      backgroundColor: const Color(0xFF0F2027),
-      body: Stack(
-        children: [
-          // Background Gradient
-          Container(
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  Color(0xFF0F2027),
-                  Color(0xFF203A43),
-                  Color(0xFF2C5364),
-                ],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-            ),
-          ),
-
-          SafeArea(
+    return MainScaffold(
+      body: SafeArea(
             child: Column(
               children: [
                 // Custom Top Bar
@@ -112,7 +95,7 @@ class _ShowItemPageState extends State<ShowItemPage> {
                           color: Colors.white,
                         ),
                         style: IconButton.styleFrom(
-                          backgroundColor: Colors.white.withOpacity(0.05),
+                          backgroundColor: Colors.white.withValues(alpha: 0.05),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
                           ),
@@ -147,22 +130,22 @@ class _ShowItemPageState extends State<ShowItemPage> {
                         child: Container(
                           padding: const EdgeInsets.all(24),
                           decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.05),
+                            color: Colors.white.withValues(alpha: 0.05),
                             borderRadius: BorderRadius.circular(30),
                             border: Border.all(
-                              color: Colors.white.withOpacity(0.1),
+                              color: Colors.white.withValues(alpha: 0.1),
                             ),
                             gradient: LinearGradient(
                               colors: [
-                                Colors.white.withOpacity(0.08),
-                                Colors.white.withOpacity(0.02),
+                                Colors.white.withValues(alpha: 0.08),
+                                Colors.white.withValues(alpha: 0.02),
                               ],
                               begin: Alignment.topLeft,
                               end: Alignment.bottomRight,
                             ),
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.black.withOpacity(0.2),
+                                color: Colors.black.withValues(alpha: 0.2),
                                 blurRadius: 20,
                                 offset: const Offset(0, 10),
                               ),
@@ -172,7 +155,7 @@ class _ShowItemPageState extends State<ShowItemPage> {
                             children: [
                               Icon(
                                 Icons.auto_stories_rounded,
-                                color: const Color(0xFFFFD700).withOpacity(0.5),
+                                color: const Color(0xFFFFD700).withValues(alpha: 0.5),
                                 size: 30,
                               ),
                               const SizedBox(height: 16),
@@ -216,7 +199,7 @@ class _ShowItemPageState extends State<ShowItemPage> {
                       vertical: 4,
                     ),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.05),
+                      color: Colors.white.withValues(alpha: 0.05),
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Text(
@@ -235,8 +218,6 @@ class _ShowItemPageState extends State<ShowItemPage> {
               ],
             ),
           ),
-        ],
-      ),
     );
   }
 
@@ -260,6 +241,7 @@ class _ShowItemPageState extends State<ShowItemPage> {
             ),
             _buildControlBtn(
               Icons.share_rounded,
+              // ignore: deprecated_member_use
               () => Share.share(story.content),
               "مشاركة",
               isPrimary: true,
@@ -289,18 +271,18 @@ class _ShowItemPageState extends State<ShowItemPage> {
     return Container(
       decoration: BoxDecoration(
         color: isPrimary
-            ? const Color(0xFFFFD700).withOpacity(0.15)
-            : Colors.white.withOpacity(0.05),
+            ? const Color(0xFFFFD700).withValues(alpha: 0.15)
+            : Colors.white.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: isPrimary
-              ? const Color(0xFFFFD700).withOpacity(0.3)
-              : Colors.white.withOpacity(0.1),
+              ? const Color(0xFFFFD700).withValues(alpha: 0.3)
+              : Colors.white.withValues(alpha: 0.1),
         ),
         boxShadow: isPrimary
             ? [
                 BoxShadow(
-                  color: const Color(0xFFFFD700).withOpacity(0.1),
+                  color: const Color(0xFFFFD700).withValues(alpha: 0.1),
                   blurRadius: 10,
                   spreadRadius: 2,
                 ),

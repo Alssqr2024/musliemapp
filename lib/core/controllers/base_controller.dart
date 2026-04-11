@@ -12,7 +12,7 @@ abstract class BaseController extends GetxController {
     final errorMsg = error.toString();
     errorMessage.value = errorMsg;
     LoggerService.error(
-      'Error in ${runtimeType}${context != null ? " - $context" : ""}',
+      'Error in $runtimeType${context != null ? " - $context" : ""}',
       error,
       StackTrace.current,
       runtimeType.toString(),

@@ -25,6 +25,13 @@ class AppTheme {
     end: Alignment.bottomRight,
   );
 
+  /// خلفية موحّدة لبطاقات الشبكة (أسماء الله وما شابه) — ألوان التطبيق فقط
+  static const LinearGradient unifiedGridCardGradient = LinearGradient(
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+    colors: [surfaceColor, Color(0xFF152A32)],
+  );
+
   // Text Styles
   static const TextStyle heading1 = TextStyle(
     fontFamily: Constants.fontTajawal,
@@ -70,7 +77,7 @@ class AppTheme {
         scrolledUnderElevation: 0,
         titleTextStyle: TextStyle(
           fontFamily: Constants.fontTajawal,
-          fontSize: 22,
+          fontSize: 20,
           fontWeight: FontWeight.bold,
           color: Colors.white,
         ),

@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="widget_calendar_desc">التقويم: هجري وميلادي ومرحلة القمر</string>
+    <string name="widget_times_desc">مواقيت الصلاة لليوم</string>
+</resources>

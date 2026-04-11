@@ -7,6 +7,9 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:hijri/hijri_calendar.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
+import 'package:musliemapp/core/constants/app_settings_keys.dart';
+import 'package:musliemapp/core/services/home_widget_sync_service.dart';
 import 'package:musliemapp/core/services/notification_service.dart';
 import 'package:musliemapp/core/services/logger_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -224,13 +227,15 @@ class PrayerTimesController extends GetxController {
               ),
               const SizedBox(height: 8),
               TextButton(
-                onPressed: () {
+                onPressed: () async {
                   Get.back();
+                  final prefs = await SharedPreferences.getInstance();
+                  await prefs.setBool('silence_gps_dialog', true);
                   // Check battery optimization later since they dismissed GPS for now
                   _checkBatteryOptimization(); 
                 },
                 child: const Text(
-                  'التكملة بتوقيت مكة الافتراضي',
+                  'التكملة بآخر موقع للأسف',
                   style: TextStyle(
                     color: Colors.white54,
                     fontSize: 14,
@@ -265,53 +270,146 @@ class PrayerTimesController extends GetxController {
     errorMessage.value = '';
     try {
       Position? position;
-      try {
-        position = await _determinePosition();
-        // Reverse geocode using OpenStreetMap Nominatim (no API key needed)
-        try {
-          final url = Uri.parse(
-            'https://nominatim.openstreetmap.org/reverse'
-            '?lat=${position.latitude}&lon=${position.longitude}'
-            '&format=json&accept-language=ar',
+      final prefs = await SharedPreferences.getInstance();
+      final locMode = prefs.getString(AppSettingsKeys.locationMode) ??
+          AppSettingsKeys.locationModeOnline;
+
+      if (locMode == AppSettingsKeys.locationModeManual) {
+        final mLat = prefs.getDouble(AppSettingsKeys.manualLat);
+        final mLon = prefs.getDouble(AppSettingsKeys.manualLon);
+        final mLabel = prefs.getString(AppSettingsKeys.manualLabel);
+        if (mLat != null && mLon != null) {
+          position = Position(
+            latitude: mLat,
+            longitude: mLon,
+            timestamp: DateTime.now(),
+            accuracy: 0,
+            altitude: 0,
+            heading: 0,
+            speed: 0,
+            speedAccuracy: 0,
+            altitudeAccuracy: 0,
+            headingAccuracy: 0,
           );
-          final resp = await http
-              .get(url, headers: {'User-Agent': 'MusliemApp/1.0'})
-              .timeout(const Duration(seconds: 5));
-          if (resp.statusCode == 200) {
-            final data = jsonDecode(resp.body);
-            final address = data['address'] as Map<String, dynamic>;
-            final city =
-                address['city'] ??
-                address['town'] ??
-                address['village'] ??
-                address['county'] ??
-                address['state'] ??
-                'موقعك';
-            locationSource.value = city.toString();
-          } else {
-            locationSource.value = 'تلقائي';
-          }
-        } catch (_) {
-          locationSource.value = 'تلقائي';
+          locationSource.value = (mLabel != null && mLabel.trim().isNotEmpty)
+              ? mLabel.trim()
+              : 'موقع يدوي';
+        } else {
+          errorMessage.value =
+              'لم يُحدد موقع يدوي. افتح الإعدادات وأدخل خط العرض والطول.';
+          position = Position(
+            latitude: 21.4225,
+            longitude: 39.8262,
+            timestamp: DateTime.now(),
+            accuracy: 0,
+            altitude: 0,
+            heading: 0,
+            speed: 0,
+            speedAccuracy: 0,
+            altitudeAccuracy: 0,
+            headingAccuracy: 0,
+          );
+          locationSource.value = 'مكة المكرمة (افتراضي)';
         }
-      } catch (locError) {
-        // Fallback to Mecca if GPS fails
-        LoggerService.warning('Location detection failed, using Mecca as fallback', 'PrayerTimes');
-        errorMessage.value =
-            'تعذّر تحديد الموقع تلقائياً. تم استخدام توقيت مكة المكرمة كافتراضي. يرجى التأكد من الـ GPS.';
-        position = Position(
-          latitude: 21.4225,
-          longitude: 39.8262,
-          timestamp: DateTime.now(),
-          accuracy: 0,
-          altitude: 0,
-          heading: 0,
-          speed: 0,
-          speedAccuracy: 0,
-          altitudeAccuracy: 0,
-          headingAccuracy: 0,
-        );
-        locationSource.value = 'مكة المكرمة (افتراضي)';
+      } else {
+        try {
+          position = await _determinePosition();
+          if (position != null) {
+            final cachedCity = prefs.getString('cached_city_name');
+            final cachedLat = prefs.getDouble('cached_city_lat');
+            final cachedLon = prefs.getDouble('cached_city_lon');
+
+            bool useCache = false;
+            if (cachedCity != null && cachedLat != null && cachedLon != null) {
+              final double distance = Geolocator.distanceBetween(
+                position.latitude,
+                position.longitude,
+                cachedLat,
+                cachedLon,
+              );
+              if (distance < 10000) {
+                useCache = true;
+              }
+            }
+
+            if (useCache) {
+              locationSource.value = cachedCity!;
+            } else {
+              try {
+                final url = Uri.parse(
+                  'https://nominatim.openstreetmap.org/reverse'
+                  '?lat=${position.latitude}&lon=${position.longitude}'
+                  '&format=json&accept-language=ar',
+                );
+                final resp = await http
+                    .get(url, headers: {'User-Agent': 'MusliemApp/1.0'})
+                    .timeout(const Duration(seconds: 5));
+                if (resp.statusCode == 200) {
+                  final data = jsonDecode(resp.body);
+                  final address = data['address'] as Map<String, dynamic>;
+                  final city =
+                      address['city'] ??
+                      address['town'] ??
+                      address['village'] ??
+                      address['county'] ??
+                      address['state'] ??
+                      'موقعك';
+                  locationSource.value = city.toString();
+
+                  await prefs.setString('cached_city_name', city.toString());
+                  await prefs.setDouble('cached_city_lat', position.latitude);
+                  await prefs.setDouble('cached_city_lon', position.longitude);
+                } else {
+                  locationSource.value = 'تلقائي';
+                }
+              } catch (_) {
+                locationSource.value = 'تلقائي';
+              }
+            }
+          }
+        } catch (locError) {
+          LoggerService.warning(
+            'Location detection failed: $locError',
+            'PrayerTimes',
+          );
+        }
+
+        if (position == null) {
+          final double? savedLat = prefs.getDouble(_keyLat);
+          final double? savedLon = prefs.getDouble(_keyLon);
+
+          if (savedLat != null && savedLon != null) {
+            position = Position(
+              latitude: savedLat,
+              longitude: savedLon,
+              timestamp: DateTime.now(),
+              accuracy: 0,
+              altitude: 0,
+              heading: 0,
+              speed: 0,
+              speedAccuracy: 0,
+              altitudeAccuracy: 0,
+              headingAccuracy: 0,
+            );
+            locationSource.value = 'آخر موقع محفوظ (أونلاين)';
+          } else {
+            errorMessage.value =
+                'تعذّر تحديد الموقع. تم استخدام توقيت مكة المكرمة كافتراضي. يرجى تفعيل GPS.';
+            position = Position(
+              latitude: 21.4225,
+              longitude: 39.8262,
+              timestamp: DateTime.now(),
+              accuracy: 0,
+              altitude: 0,
+              heading: 0,
+              speed: 0,
+              speedAccuracy: 0,
+              altitudeAccuracy: 0,
+              headingAccuracy: 0,
+            );
+            locationSource.value = 'مكة المكرمة (افتراضي)';
+          }
+        }
       }
 
       _lastCoordinates = Coordinates(position.latitude, position.longitude);
@@ -330,12 +428,12 @@ class PrayerTimesController extends GetxController {
 
       _updateNextPrayer();
 
-      // Only reschedule if it's a new day or prayer times changed significantly
-      if (_needsReschedule()) {
-        _scheduleNotifications();
-      }
+      await syncNotificationSettings();
 
       _startTimer();
+      if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
+        await HomeWidgetSyncService.syncPrayerData(this);
+      }
     } catch (e) {
       LoggerService.error('Error loading prayer times', e, StackTrace.current, 'PrayerTimes');
       errorMessage.value = 'حدث خطأ غير متوقع. يرجى المحاولة مرة أخرى.';
@@ -344,15 +442,6 @@ class PrayerTimesController extends GetxController {
     }
   }
 
-  DateTime? _lastScheduledDay;
-  bool _needsReschedule() {
-    final now = DateTime.now();
-    if (_lastScheduledDay == null) return true;
-    final daysSinceScheduled = now.difference(_lastScheduledDay!).inDays;
-    return daysSinceScheduled >= _daysToSchedule - 1;
-  }
-
-  static const int _daysToSchedule = 7;
   static const String _keyLat = 'prayer_last_lat';
   static const String _keyLon = 'prayer_last_lon';
 
@@ -364,38 +453,24 @@ class PrayerTimesController extends GetxController {
     } catch (_) {}
   }
 
-  void _scheduleNotifications() {
-    if (_prayerTimes == null || _lastCoordinates == null) return;
+  /// Applies prayer + Quran notification preferences (call after coordinates are known).
+  Future<void> syncNotificationSettings() async {
+    final prefs = await SharedPreferences.getInstance();
+    final prayerOn = prefs.getBool(AppSettingsKeys.notifyPrayer) ?? true;
+    final quranOn = prefs.getBool(AppSettingsKeys.notifyQuranDaily) ?? false;
+    final hour = prefs.getInt(AppSettingsKeys.quranReminderHour) ?? 8;
+    final minute = prefs.getInt(AppSettingsKeys.quranReminderMinute) ?? 0;
 
-    final notificationService = NotificationService();
-    notificationService.cancelAllNotifications();
-
-    final params = CalculationMethod.muslim_world_league.getParameters();
-    params.madhab = Madhab.shafi;
-    const prayerNames = ['الفجر', 'الظهر', 'العصر', 'المغرب', 'العشاء'];
-
-    for (int dayOffset = 0; dayOffset < _daysToSchedule; dayOffset++) {
-      final date = DateTime.now().add(Duration(days: dayOffset));
-      final dateComponents = DateComponents.from(date);
-      final dayPrayerTimes = PrayerTimes(_lastCoordinates!, dateComponents, params);
-      final times = [
-        dayPrayerTimes.fajr,
-        dayPrayerTimes.dhuhr,
-        dayPrayerTimes.asr,
-        dayPrayerTimes.maghrib,
-        dayPrayerTimes.isha,
-      ];
-      for (int i = 0; i < 5; i++) {
-        final id = dayOffset * 10 + (i + 1);
-        notificationService.schedulePrayerNotification(
-          id: id,
-          title: 'حان الآن موعد صلاة ${prayerNames[i]}',
-          body: 'أقم صلاتك يا رعاك الله',
-          scheduledDate: times[i],
-        );
-      }
+    final ns = NotificationService();
+    await ns.cancelPrayerNotifications();
+    if (prayerOn && _lastCoordinates != null) {
+      await ns.schedulePrayerWeek(_lastCoordinates!);
     }
-    _lastScheduledDay = DateTime.now();
+
+    await ns.cancelQuranDailyNotification();
+    if (quranOn) {
+      await ns.scheduleDailyQuranReminder(hour: hour, minute: minute);
+    }
   }
 
   void _updateNextPrayer() {
@@ -464,22 +539,26 @@ class PrayerTimesController extends GetxController {
     return '${h.toString().padLeft(2, '0')}:${m.toString().padLeft(2, '0')}:${s.toString().padLeft(2, '0')}';
   }
 
-  Future<Position> _determinePosition() async {
+  Future<Position?> _determinePosition() async {
     bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) {
-      _showGpsEnableDialog();
-      throw Exception('GPS disabled');
+      final prefs = await SharedPreferences.getInstance();
+      final bool hasSilencedGps = prefs.getBool('silence_gps_dialog') ?? false;
+      if (!hasSilencedGps) {
+        _showGpsEnableDialog();
+      }
+      return null;
     }
 
     LocationPermission permission = await Geolocator.checkPermission();
     if (permission == LocationPermission.denied) {
       permission = await Geolocator.requestPermission();
       if (permission == LocationPermission.denied) {
-        throw Exception('Permission denied');
+        return null;
       }
     }
     if (permission == LocationPermission.deniedForever) {
-      throw Exception('Permission denied forever');
+      return null;
     }
 
     // Attempt to get last known position first

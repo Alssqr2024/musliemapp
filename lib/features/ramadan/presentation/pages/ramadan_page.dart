@@ -1,8 +1,9 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:musliemapp/utils/constants/file_json.dart';
 import 'package:musliemapp/utils/widgets/card_home.dart';
+import 'package:musliemapp/utils/widgets/main_scaffold.dart';
+import 'package:musliemapp/utils/widgets/premium_sliver_app_bar.dart';
 import 'package:musliemapp/features/ramadan/presentation/pages/ramadan_items_page.dart';
 
 class RamadanPage extends StatelessWidget {
@@ -10,75 +11,13 @@ class RamadanPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFF0F2027),
-      body: Stack(
-        children: [
-          // Background Gradient
-          Container(
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  Color(0xFF0F2027),
-                  Color(0xFF203A43),
-                  Color(0xFF2C5364),
-                ],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-            ),
-          ),
-
-          CustomScrollView(
-            physics: const BouncingScrollPhysics(),
-            slivers: [
-              // Premium SliverAppBar
-              SliverAppBar(
-                expandedHeight: 200,
-                floating: false,
-                pinned: true,
-                backgroundColor: const Color(0xFF0F2027),
-                elevation: 0,
-                flexibleSpace: FlexibleSpaceBar(
-                  centerTitle: true,
-                  title: const Text(
-                    'رمضان المبارك',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 18,
-                    ),
-                  ),
-                  background: Stack(
-                    fit: StackFit.expand,
-                    children: [
-                      // Header Decorations
-                      Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const SizedBox(height: 20),
-                            const Icon(
-                              Icons.calendar_month_rounded,
-                              size: 50,
-                              color: Color(0xFFFFD700),
-                            ),
-                            const SizedBox(height: 10),
-                            Text(
-                              "أهلاً بشهر الخير والبركات",
-                              style: TextStyle(
-                                color: Colors.white.withOpacity(0.7),
-                                fontSize: 13,
-                                letterSpacing: 1.1,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
+    return MainScaffold(
+      slivers: [
+        const PremiumSliverAppBar(
+          title: 'رمضان المبارك',
+          icon: Icons.calendar_month_rounded,
+          subtitle: "أهلاً بشهر الخير والبركات",
+        ),
 
               SliverPadding(
                 padding: const EdgeInsets.all(16),
@@ -99,9 +38,6 @@ class RamadanPage extends StatelessWidget {
 
               const SliverToBoxAdapter(child: SizedBox(height: 40)),
             ],
-          ),
-        ],
-      ),
     );
   }
 

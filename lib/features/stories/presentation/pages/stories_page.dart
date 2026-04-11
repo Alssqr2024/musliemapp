@@ -1,8 +1,9 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:musliemapp/core/bindings/stories_binding.dart';
 import 'package:musliemapp/features/stories/domain/usecases/stories_usecase.dart';
+import 'package:musliemapp/utils/widgets/main_scaffold.dart';
+import 'package:musliemapp/utils/widgets/premium_sliver_app_bar.dart';
 import '../controllers/stories_controller.dart';
 import 'show_item_page.dart';
 
@@ -29,84 +30,22 @@ class StoriesPage extends StatelessWidget {
     }
     final controller = Get.find<StoriesController>(tag: category);
 
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      controller.fetchStories(category);
-    });
+    if (controller.stories.isEmpty && !controller.isLoading.value) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        controller.fetchStories(category);
+      });
+    }
 
-    return Scaffold(
-      backgroundColor: const Color(0xFF0F2027),
-      body: Stack(
-        children: [
-          // Background Gradient
-          Container(
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  Color(0xFF0F2027),
-                  Color(0xFF203A43),
-                  Color(0xFF2C5364),
-                ],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-            ),
-          ),
+    return MainScaffold(
+      slivers: [
+        PremiumSliverAppBar(
+          title: pageTitle,
+          icon: Icons.auto_stories_rounded,
+          useCircledIcon: true,
+        ),
 
-          CustomScrollView(
-            physics: const BouncingScrollPhysics(),
-            slivers: [
-              // Dynamic SliverAppBar
-              SliverAppBar(
-                expandedHeight: 180,
-                floating: false,
-                pinned: true,
-                backgroundColor: const Color(0xFF0F2027),
-                elevation: 0,
-                flexibleSpace: FlexibleSpaceBar(
-                  centerTitle: true,
-                  title: Text(
-                    pageTitle,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 18,
-                    ),
-                  ),
-                  background: Stack(
-                    fit: StackFit.expand,
-                    children: [
-                      // Category Icon
-                      Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const SizedBox(height: 20),
-                            Container(
-                              padding: const EdgeInsets.all(16),
-                              decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.05),
-                                shape: BoxShape.circle,
-                                border: Border.all(
-                                  color: Colors.white.withOpacity(0.1),
-                                ),
-                              ),
-                              child: const Icon(
-                                Icons.auto_stories_rounded,
-                                size: 40,
-                                color: Color(0xFFFFD700),
-                              ),
-                            ),
-                            const SizedBox(height: 10),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-
-              // Content List
-              SliverPadding(
+        // Content List
+        SliverPadding(
                 padding: const EdgeInsets.all(20),
                 sliver: Obx(() {
                   if (controller.isLoading.value) {
@@ -137,14 +76,12 @@ class StoriesPage extends StatelessWidget {
                         padding: const EdgeInsets.only(bottom: 16.0),
                         child: ClipRRect(
                           borderRadius: BorderRadius.circular(20),
-                          child: BackdropFilter(
-                            filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-                            child: Container(
+                        child: Container(
                               decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.05),
+                                color: Colors.white.withValues(alpha: 0.05),
                                 borderRadius: BorderRadius.circular(20),
                                 border: Border.all(
-                                  color: Colors.white.withOpacity(0.1),
+                                  color: Colors.white.withValues(alpha: 0.1),
                                 ),
                               ),
                               child: ListTile(
@@ -157,7 +94,7 @@ class StoriesPage extends StatelessWidget {
                                   decoration: BoxDecoration(
                                     color: const Color(
                                       0xFFFFD700,
-                                    ).withOpacity(0.1),
+                                    ).withValues(alpha: 0.1),
                                     shape: BoxShape.circle,
                                   ),
                                   child: const Icon(
@@ -201,7 +138,6 @@ class StoriesPage extends StatelessWidget {
                               ),
                             ),
                           ),
-                        ),
                       );
                     }, childCount: controller.stories.length),
                   );
@@ -210,9 +146,6 @@ class StoriesPage extends StatelessWidget {
 
               const SliverToBoxAdapter(child: SizedBox(height: 40)),
             ],
-          ),
-        ],
-      ),
     );
   }
 }

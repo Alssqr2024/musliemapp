@@ -7,7 +7,7 @@ class StoriesController extends GetxController {
   StoriesController({required this.storiesUseCase});
 
   var stories = <Story>[].obs;
-  var isLoading = true.obs;
+  var isLoading = false.obs;
   var errorMessage = ''.obs;
 
   Future<void> fetchStories(String category) async {

@@ -1,101 +1,37 @@
-import 'dart:ui';
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:musliemapp/core/theme/app_theme.dart';
 import 'package:musliemapp/core/bindings/names_allah_binding.dart';
 import 'package:musliemapp/features/names_of_allah/presentation/controllers/names_allah_controller.dart';
+import 'package:musliemapp/features/names_of_allah/presentation/widgets/name_card.dart';
+import 'package:musliemapp/utils/constants/constants.dart';
+import 'package:musliemapp/utils/widgets/main_scaffold.dart';
+import 'package:musliemapp/utils/widgets/premium_sliver_app_bar.dart';
 
 class NamesAllahPage extends StatelessWidget {
   const NamesAllahPage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    // Initialize binding if not already done
     if (!Get.isRegistered<NamesAllahController>()) {
       NamesAllahBinding().dependencies();
     }
     final controller = Get.find<NamesAllahController>();
 
-    return Scaffold(
-      backgroundColor: const Color(0xFF0F2027),
-      body: Stack(
-        children: [
-          // Background Gradient
-          Container(
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  AppTheme.backgroundColor,
-                  Color(0xFF203A43),
-                  Color(0xFF2C5364),
-                ],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-            ),
-          ),
+    return MainScaffold(
+      slivers: [
+        const PremiumSliverAppBar(
+          title: 'أسماء الله الحسنى',
+          icon: Icons.star_outline_rounded,
+          subtitle: 'من أحصاها دخل الجنة',
+          useCircledIcon: true,
+          showDecorativeCircles: true,
+        ),
 
-          CustomScrollView(
-            physics: const BouncingScrollPhysics(),
-            slivers: [
-              // Premium SliverAppBar
-              SliverAppBar(
-                expandedHeight: 200,
-                floating: false,
-                pinned: true,
-                backgroundColor: const Color(0xFF0F2027),
-                elevation: 0,
-                flexibleSpace: FlexibleSpaceBar(
-                  centerTitle: true,
-                  title: Text(
-                    'أسماء الله الحسنى',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 18,
-                      shadows: [
-                        Shadow(
-                          blurRadius: 10,
-                          color: Colors.black.withOpacity(0.5),
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                  ),
-                  background: Stack(
-                    fit: StackFit.expand,
-                    children: [
-                      // Header Decorations
-                      Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const SizedBox(height: 20),
-                            const Icon(
-                              Icons.star_outline_rounded,
-                              size: 50,
-                              color: AppTheme.secondaryColor,
-                            ),
-                            const SizedBox(height: 10),
-                            Text(
-                              "٩٩ اسماً من أحصاها دخل الجنة",
-                              style: TextStyle(
-                                color: Colors.white.withOpacity(0.7),
-                                fontSize: 13,
-                                letterSpacing: 1.2,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-
-              // Names Grid
-              SliverPadding(
-                padding: const EdgeInsets.all(16),
+        // Names Grid
+        SliverPadding(
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
                 sliver: Obx(() {
                   if (controller.isLoading.value) {
                     return const SliverFillRemaining(
@@ -107,21 +43,40 @@ class NamesAllahPage extends StatelessWidget {
                     );
                   }
 
+                  if (controller.errorMessage.isNotEmpty) {
+                    return SliverFillRemaining(
+                      child: Center(
+                        child: Text(
+                          controller.errorMessage.value,
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            color: Colors.white70,
+                            fontFamily: Constants.fontTajawal,
+                          ),
+                        ),
+                      ),
+                    );
+                  }
+
                   return SliverGrid(
                     gridDelegate:
                         const SliverGridDelegateWithFixedCrossAxisCount(
                           crossAxisCount: 3,
                           childAspectRatio: 0.9,
-                          crossAxisSpacing: 12,
-                          mainAxisSpacing: 12,
+                          crossAxisSpacing: 10,
+                          mainAxisSpacing: 10,
                         ),
                     delegate: SliverChildBuilderDelegate((context, index) {
                       final name = controller.namesList[index];
-                      return _NameCard(
+                      return NameCard(
                         index: index,
                         name: name.name,
-                        onTap: () =>
-                            _showNameDetail(context, name.name, name.text),
+                        onTap: () => _showNameDetail(
+                          context,
+                          index,
+                          name.name,
+                          name.text,
+                        ),
                       );
                     }, childCount: controller.namesList.length),
                   );
@@ -130,167 +85,191 @@ class NamesAllahPage extends StatelessWidget {
 
               const SliverToBoxAdapter(child: SizedBox(height: 40)),
             ],
-          ),
-        ],
-      ),
     );
   }
 
-  void _showNameDetail(BuildContext context, String nameStr, String desc) {
+  void _showNameDetail(
+    BuildContext context,
+    int index,
+    String nameStr,
+    String desc,
+  ) {
     Get.dialog(
-      BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-        child: Dialog(
-          backgroundColor: Colors.transparent,
-          insetPadding: const EdgeInsets.symmetric(
-            horizontal: 20,
-            vertical: 40,
-          ),
-          child: Container(
-            padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(
-              color: AppTheme.backgroundColor.withOpacity(0.9),
-              borderRadius: BorderRadius.circular(32),
-              border: Border.all(
-                color: AppTheme.secondaryColor.withOpacity(0.3),
-              ),
-            ),
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    width: 150,
-                    height: 150,
-                    decoration: BoxDecoration(
-                      color: AppTheme.secondaryColor.withOpacity(0.05),
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: AppTheme.secondaryColor.withOpacity(0.2),
-                      ),
-                    ),
-                    padding: const EdgeInsets.all(15),
-                    child: Image.asset(
-                      'assets/images/${Get.find<NamesAllahController>().namesList.indexOf(Get.find<NamesAllahController>().namesList.firstWhere((e) => e.name == nameStr)) + 1}.png',
-                      fit: BoxFit.contain,
-                      errorBuilder: (context, error, stackTrace) => const Icon(
-                        Icons.auto_awesome_rounded,
-                        color: AppTheme.secondaryColor,
-                        size: 35,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  const Divider(color: Colors.white10),
-                  const SizedBox(height: 20),
-                  Text(
-                    desc,
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 18,
-                      height: 1.8,
-                    ),
-                  ),
-                  const SizedBox(height: 30),
-                  ElevatedButton(
-                    onPressed: () => Get.back(),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppTheme.secondaryColor.withOpacity(0.1),
-                      foregroundColor: AppTheme.secondaryColor,
-                      elevation: 0,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 40,
-                        vertical: 12,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                        side: BorderSide(
-                          color: AppTheme.secondaryColor.withOpacity(0.5),
-                        ),
-                      ),
-                    ),
-                    child: const Text(
-                      'إغلاق',
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
+      Dialog(
+        backgroundColor: Colors.transparent,
+        insetPadding: const EdgeInsets.symmetric(
+          horizontal: 20,
+          vertical: 60,
         ),
-      ),
-    );
-  }
-}
-
-class _NameCard extends StatelessWidget {
-  final int index;
-  final String name;
-  final VoidCallback onTap;
-
-  const _NameCard({
-    required this.index,
-    required this.name,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(20),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
         child: Container(
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.05),
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: Colors.white.withOpacity(0.1)),
             gradient: LinearGradient(
               colors: [
-                Colors.white.withOpacity(0.08),
-                Colors.white.withOpacity(0.02),
+                AppTheme.surfaceColor,
+                AppTheme.backgroundColor,
               ],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
+            borderRadius: BorderRadius.circular(32),
+            border: Border.all(
+              color: AppTheme.secondaryColor.withValues(alpha: 0.28),
+              width: 1.5,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.5),
+                blurRadius: 30,
+                spreadRadius: 5,
+              ),
+            ],
           ),
-          child: Material(
-            color: Colors.transparent,
-            child: InkWell(
-              onTap: onTap,
-              child: Stack(
+          child: SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.all(28),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  Positioned(
-                    top: 8,
-                    left: 8,
-                    child: Text(
-                      (index + 1).toString(),
-                      style: TextStyle(
-                        color: Colors.white.withOpacity(0.1),
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
+                  // رقم الاسم
+                  Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: AppTheme.secondaryColor.withValues(alpha: 0.15),
+                      border: Border.all(
+                        color: AppTheme.secondaryColor.withValues(alpha: 0.4),
                       ),
                     ),
-                  ),
-                  Center(
-                    child: Padding(
-                      padding: const EdgeInsets.all(12.0),
-                      child: Image.asset(
-                        'assets/images/${index + 1}.png',
-                        fit: BoxFit.contain,
-                        errorBuilder: (context, error, stackTrace) => Text(
-                          name,
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
+                    child: Center(
+                      child: Text(
+                        '${index + 1}',
+                        style: const TextStyle(
+                          color: AppTheme.secondaryColor,
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          fontFamily: Constants.fontTajawal,
                         ),
                       ),
                     ),
+                  ),
+                  const SizedBox(height: 20),
+
+                  // الاسم الكريم — بتصميم مُحتفى به
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 20),
+                    decoration: BoxDecoration(
+                      gradient: RadialGradient(
+                        colors: [
+                          AppTheme.secondaryColor.withValues(alpha: 0.12),
+                          AppTheme.secondaryColor.withValues(alpha: 0.03),
+                        ],
+                        radius: 1.2,
+                      ),
+                      borderRadius: BorderRadius.circular(24),
+                      border: Border.all(
+                        color: AppTheme.secondaryColor.withValues(alpha: 0.25),
+                        width: 1,
+                      ),
+                    ),
+                    child: Text(
+                      nameStr,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        fontFamily: Constants.fontTajawal,
+                        fontSize: 32,
+                        fontWeight: FontWeight.w800,
+                        color: AppTheme.secondaryColor,
+                        height: 1.35,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 20),
+                  Container(
+                    height: 1,
+                    color: Colors.white.withValues(alpha: 0.08),
+                  ),
+                  const SizedBox(height: 20),
+
+                  // الشرح
+                  Text(
+                    desc,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      fontFamily: Constants.fontTajawal,
+                      color: AppTheme.textPrimary,
+                      fontSize: 16,
+                      height: 1.75,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+
+                  const SizedBox(height: 28),
+
+                  // أزرار
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          onPressed: () {
+                            Clipboard.setData(ClipboardData(text: '$nameStr\n\n$desc'));
+                            Get.snackbar(
+                              '',
+                              'تم النسخ',
+                              snackPosition: SnackPosition.BOTTOM,
+                              backgroundColor: Colors.white.withValues(alpha: 0.1),
+                              colorText: Colors.white,
+                              borderRadius: 16,
+                              margin: const EdgeInsets.all(16),
+                              duration: const Duration(seconds: 2),
+                            );
+                          },
+                          icon: const Icon(Icons.copy_rounded, size: 16),
+                          label: const Text(
+                            'نسخ',
+                            style: TextStyle(fontFamily: Constants.fontTajawal),
+                          ),
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: Colors.white70,
+                            side: BorderSide(
+                              color: Colors.white.withValues(alpha: 0.2),
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(14),
+                            ),
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: () => Get.back(),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppTheme.secondaryColor.withValues(alpha: 0.15),
+                            foregroundColor: AppTheme.secondaryColor,
+                            elevation: 0,
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(14),
+                              side: BorderSide(
+                                color: AppTheme.secondaryColor.withValues(alpha: 0.4),
+                              ),
+                            ),
+                          ),
+                          child: const Text(
+                            'إغلاق',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontFamily: Constants.fontTajawal,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -301,3 +280,4 @@ class _NameCard extends StatelessWidget {
     );
   }
 }
+

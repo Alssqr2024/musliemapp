@@ -1,0 +1,12 @@
+# انسخ هذا الملف إلى key.properties واملأ القيم (لا ترفع key.properties إلى Git).
+# Copy to key.properties and fill in (never commit key.properties).
+#
+# إنشاء المفتاح:
+# keytool -genkey -v -keystore upload-keystore.jks -keyalg RSA -keysize 2048 -validity 10000 -alias upload
+#
+# ضع ملف upload-keystore.jks داخل مجلد android/ (أو عدّل المسار في storeFile).
+
+storePassword=your_keystore_password
+keyPassword=your_key_password
+keyAlias=upload
+storeFile=upload-keystore.jks
